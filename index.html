@@ -87,6 +87,8 @@
     .kicker{font-size:12px}
     .name{font-size:30px}
   }
+.tlabel{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5a6b85;margin-top:8px}
+  .newsearch{display:block;width:100%;margin:12px 0 24px;padding:14px;font-size:16px}
 </style>
 </head>
 <body>
@@ -117,7 +119,7 @@
     <p class="label">Guest check-in</p>
     <div class="row">
       <input id="q" type="search" placeholder="Search name (min 2 letters)" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button class="secondary" id="clearBtn">Clear</button>
+      <button class="secondary" id="clearBtn">← New search</button>
     </div>
   </section>
   <section id="programView" class="hidden">
@@ -287,7 +289,7 @@
       var t = g.tickets.map(function (k) {
         return '<div class="ticket">' +
           '<div class="meta">ID ' + esc(k.id) + ' · ' + esc(k.ticketType || 'Ticket') + '</div>' +
-          '<div class="table' + (k.generalSeating ? ' general' : '') + '">' + esc(k.table) + '</div>' +
+          '<div class="tlabel">Table Number</div><div class="table' + (k.generalSeating ? ' general' : '') + '">' + esc(k.table) + '</div>' +
           (k.escort ? '<div class="escort">Refer to ' + esc(k.escort) + ' for seating</div>' : '') +
           '<div class="meta">Meal: ' + esc(k.meal || '—') + '</div>' +
           '<div class="status ' + (k.checkedIn ? 'yes' : 'no') + '">' + (k.checkedIn ? '✔ Checked in' : 'Not checked in') + '</div>' +
@@ -297,10 +299,12 @@
       return '<div class="card"><div class="name">' + esc(g.name) + '</div>' +
         (g.label ? '<div class="guest">' + esc(g.label) + '</div>' : '') + t + '</div>';
     }).join('');
-    $('results').innerHTML = html;
+    $('results').innerHTML = html + (groups.length ? '<button class="secondary newsearch" id="newSearch2">\u2190 New search</button>' : '');
   }
 
+  function resetSearch() { $('q').value = ''; $('results').innerHTML = ''; msg(''); window.scrollTo(0, 0); $('q').focus(); }
   $('results').addEventListener('click', function (e) {
+    if (e.target.closest('#newSearch2')) { resetSearch(); return; }
     var b = e.target.closest('button[data-row]');
     if (!b) return;
     b.disabled = true; b.textContent = 'Saving…';
@@ -311,7 +315,7 @@
   });
 
   $('q').addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
-  $('clearBtn').addEventListener('click', function () { $('q').value = ''; $('results').innerHTML = ''; msg(''); $('q').focus(); });
+  $('clearBtn').addEventListener('click', resetSearch);
 
   function tryPin() {
     var p = $('pin').value.trim();
