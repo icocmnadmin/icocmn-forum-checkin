@@ -119,7 +119,7 @@
     <p class="label">Guest check-in</p>
     <div class="row">
       <input id="q" type="search" placeholder="Search name (min 2 letters)" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button class="secondary" id="clearBtn">← New search</button>
+      <button class="secondary" id="clearBtn">Search</button>
     </div>
   </section>
   <section id="programView" class="hidden">
@@ -274,7 +274,7 @@
 
   function doSearch() {
     var q = $('q').value.trim();
-    if (q.length < 2) { $('results').innerHTML = ''; msg(''); return; }
+    if (q.length < 2) { $('results').innerHTML = ''; msg(q.length ? 'Type at least 2 letters.' : ''); setBtn(false); return; }
     var my = ++seq;
     msg('Searching…');
     call('search', { q: q }, function (res) {
@@ -299,10 +299,12 @@
       return '<div class="card"><div class="name">' + esc(g.name) + '</div>' +
         (g.label ? '<div class="guest">' + esc(g.label) + '</div>' : '') + t + '</div>';
     }).join('');
-    $('results').innerHTML = html + (groups.length ? '<button class="secondary newsearch" id="newSearch2">\u2190 New search</button>' : '');
+    $('results').innerHTML = html + (groups.length ? '<button class="secondary newsearch" id="newSearch2">Reset</button>' : '');
+    setBtn(groups.length > 0);
   }
+  function setBtn(has) { var b = $('clearBtn'); b.textContent = has ? 'Reset' : 'Search'; b.className = has ? 'secondary' : 'btn-in'; }
 
-  function resetSearch() { $('q').value = ''; $('results').innerHTML = ''; msg(''); window.scrollTo(0, 0); $('q').focus(); }
+  function resetSearch() { $('q').value = ''; $('results').innerHTML = ''; setBtn(false); msg(''); window.scrollTo(0, 0); $('q').focus(); }
   $('results').addEventListener('click', function (e) {
     if (e.target.closest('#newSearch2')) { resetSearch(); return; }
     var b = e.target.closest('button[data-row]');
@@ -315,7 +317,8 @@
   });
 
   $('q').addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
-  $('clearBtn').addEventListener('click', resetSearch);
+  $('clearBtn').addEventListener('click', function () { if ($('clearBtn').textContent === 'Reset') resetSearch(); else { clearTimeout(timer); doSearch(); } });
+  $('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(timer); doSearch(); } });
 
   function tryPin() {
     var p = $('pin').value.trim();
